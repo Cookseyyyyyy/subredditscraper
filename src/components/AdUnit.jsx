@@ -13,7 +13,7 @@ const AdUnit = ({ dataAdSlot }) => {
     <ins
       className="adsbygoogle"
       style={{ display: 'block' }}
-      data-ad-client="YOUR-AD-CLIENT-ID" // Replace with your AdSense ID
+      data-ad-client="ca-pub-2228923604379440"
       data-ad-slot={dataAdSlot}
       data-ad-format="auto"
       data-full-width-responsive="true"

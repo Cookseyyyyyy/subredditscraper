@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import './App.css';
-import { AdUnit } from './components/AdUnit';
 
 function App() {
   // State variables
@@ -79,9 +78,6 @@ function App() {
     return (
       <div className="App">
         <h1>Top Posts By Subreddit</h1>
-        <div className="ad-container">
-          <AdUnit dataAdSlot="YOUR-AD-SLOT-ID-1" />
-        </div>
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {Object.entries(groupedPosts).map(([subreddit, subredditPosts]) => (
           <div key={subreddit} className="subreddit-section">
@@ -135,9 +131,6 @@ function App() {
             </table>
           </div>
         ))}
-        <div className="ad-container">
-          <AdUnit dataAdSlot="YOUR-AD-SLOT-ID-2" />
-        </div>
       </div>
     );
   }
@@ -146,9 +139,6 @@ function App() {
   return (
     <div className="App">
       <h1>Reddit Top Posts Finder</h1>
-      <div className="ad-container">
-        <AdUnit dataAdSlot="YOUR-AD-SLOT-ID-3" />
-      </div>
 
       <div className="input-group">
         <input
