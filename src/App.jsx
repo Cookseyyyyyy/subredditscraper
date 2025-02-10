@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
-import AdUnit from './components/AdUnit';
+import { AdUnit } from './components/AdUnit';
 
 function App() {
   // State variables
