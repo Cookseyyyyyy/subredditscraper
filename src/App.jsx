@@ -205,8 +205,8 @@ function App() {
   // Display the subreddit input form if posts have not been loaded
   return (
     <div className="App">
-      <h1>Reddit Top Posts Finder</h1>
-      <h2>Find the top posts in the last month from any subreddit</h2>
+      <h1>Subreddit Scraper</h1>
+      <h2>Aggrigate the top posts in the last month from any subreddit</h2>
       <AdUnit />
       <div className="input-group">
         <div className="input-wrapper">
