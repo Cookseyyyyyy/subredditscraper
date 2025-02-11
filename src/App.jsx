@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import AdUnit from './components/AdUnit';
+import useTypingAnimation from './hooks/useTypingAnimation';
 
 function App() {
   // State variables
@@ -9,6 +10,15 @@ function App() {
   const [posts, setPosts] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const placeholderText = useTypingAnimation([
+    'marketing',
+    'artificial',
+    'worldnews',
+    'technology',
+    'science'
+  ]);
+  const [cursorPosition, setCursorPosition] = useState(0);
 
   // Add this useEffect at the top of the component
   useEffect(() => {
@@ -22,6 +32,26 @@ function App() {
       document.head.removeChild(script);
     };
   }, []);
+
+  // Add this effect to update cursor position
+  useEffect(() => {
+    if (!isInputFocused) {
+      // Create a temporary span to measure text width
+      const span = document.createElement('span');
+      span.style.visibility = 'hidden';
+      span.style.position = 'absolute';
+      span.style.whiteSpace = 'pre';
+      span.style.font = window.getComputedStyle(document.querySelector('.input-group input')).font;
+      span.textContent = placeholderText;
+      document.body.appendChild(span);
+      
+      // Calculate the width
+      const width = span.getBoundingClientRect().width;
+      document.body.removeChild(span);
+      
+      setCursorPosition(width);
+    }
+  }, [placeholderText, isInputFocused]);
 
   // Function to add a subreddit to the list
   const addSubreddit = () => {
@@ -158,18 +188,29 @@ function App() {
       <h2>Find the top posts in the last month from any subreddit</h2>
       <AdUnit />
       <div className="input-group">
-        <input
-          type="text"
-          value={subredditInput}
-          onChange={e => setSubredditInput(e.target.value)}
-          placeholder="Enter subreddit name"
-          onKeyPress={e => {
-            if (e.key === 'Enter') {
-              addSubreddit();
-            }
-          }}
-          disabled={subreddits.length >= 3}
-        />
+        <div className="input-wrapper">
+          <input
+            type="text"
+            value={subredditInput}
+            onChange={e => setSubredditInput(e.target.value)}
+            placeholder={isInputFocused ? "Enter subreddit name" : placeholderText}
+            onKeyPress={e => {
+              if (e.key === 'Enter') {
+                addSubreddit();
+              }
+            }}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
+            disabled={subreddits.length >= 3}
+          />
+          <div 
+            className="cursor" 
+            style={{ 
+              transform: `translateX(${cursorPosition}px)`,
+              display: isInputFocused ? 'none' : 'block'
+            }}
+          />
+        </div>
         <button 
           onClick={addSubreddit} 
           disabled={!subredditInput.trim() || subreddits.length >= 3}
