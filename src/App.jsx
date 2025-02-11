@@ -206,7 +206,7 @@ function App() {
   return (
     <div className="App">
       <h1>Subreddit Scraper</h1>
-      <h2>Aggrigate the top posts in the last month from any subreddit</h2>
+      <h4>Aggrigate the top posts in the last month from multiple subreddits</h4>
       <AdUnit />
       <div className="input-group">
         <div className="input-wrapper">
