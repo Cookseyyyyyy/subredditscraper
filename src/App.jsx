@@ -3,6 +3,34 @@ import './App.css';
 import AdUnit from './components/AdUnit';
 import useTypingAnimation from './hooks/useTypingAnimation';
 
+// Add this new component above App
+const PostsTable = ({ subreddit, posts }) => {
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Upvotes</th>
+          <th>Link</th>
+        </tr>
+      </thead>
+      <tbody>
+        {posts.map(post => (
+          <tr key={`${post.subreddit}-${post.id}`}>
+            <td>{post.title}</td>
+            <td>{post.ups}</td>
+            <td>
+              <a href={post.url} target="_blank" rel="noopener noreferrer">
+                Visit
+              </a>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};
+
 function App() {
   // State variables
   const [subredditInput, setSubredditInput] = useState('');
@@ -33,25 +61,43 @@ function App() {
     };
   }, []);
 
-  // Add this effect to update cursor position
+  // Replace the cursor position useEffect with this updated version
   useEffect(() => {
     if (!isInputFocused) {
-      // Create a temporary span to measure text width
-      const span = document.createElement('span');
-      span.style.visibility = 'hidden';
-      span.style.position = 'absolute';
-      span.style.whiteSpace = 'pre';
-      span.style.font = window.getComputedStyle(document.querySelector('.input-group input')).font;
-      span.textContent = placeholderText;
-      document.body.appendChild(span);
+      // Get the input element first
+      const inputElement = document.querySelector('.input-group input');
       
-      // Calculate the width
-      const width = span.getBoundingClientRect().width;
-      document.body.removeChild(span);
-      
-      setCursorPosition(width);
+      // Only proceed if the input element exists
+      if (inputElement) {
+        // Create a temporary span to measure text width
+        const span = document.createElement('span');
+        span.style.visibility = 'hidden';
+        span.style.position = 'absolute';
+        span.style.whiteSpace = 'pre';
+        span.style.font = window.getComputedStyle(inputElement).font;
+        span.textContent = placeholderText;
+        document.body.appendChild(span);
+        
+        // Calculate the width
+        const width = span.getBoundingClientRect().width;
+        document.body.removeChild(span);
+        
+        setCursorPosition(width);
+      }
     }
   }, [placeholderText, isInputFocused]);
+
+  // Add this effect to clean up cursor position when component unmounts
+  useEffect(() => {
+    return () => {
+      setCursorPosition(0);
+    };
+  }, []);
+
+  // Add this near the top of your component
+  useEffect(() => {
+    console.log('Posts state changed:', posts);
+  }, [posts]);
 
   // Function to add a subreddit to the list
   const addSubreddit = () => {
@@ -74,6 +120,7 @@ function App() {
     if (subreddits.length === 0) return;
     setLoading(true);
     setError(null);
+    setPosts(null); // Reset posts before fetching
 
     try {
       const fetchPromises = subreddits.map((subreddit) =>
@@ -84,22 +131,25 @@ function App() {
             }
             return response.json();
           })
-          .then(data =>
-            data.data.children.map(child => ({
+          .then(data => ({
+            subreddit,
+            posts: data.data.children.map(child => ({
               id: child.data.id,
               title: child.data.title,
               url: child.data.url,
               ups: child.data.ups,
-              // Optionally track which subreddit this post came from
               subreddit: subreddit,
             }))
-          )
+          }))
       );
 
       const results = await Promise.all(fetchPromises);
-      // Flatten the results (which is an array of arrays)
-      const combinedPosts = results.flat();
-      setPosts(combinedPosts);
+      // Store the results in a more stable format
+      const postsData = {};
+      results.forEach(({ subreddit, posts }) => {
+        postsData[subreddit] = posts;
+      });
+      setPosts(postsData);
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -109,22 +159,13 @@ function App() {
   };
 
   // If posts are fetched, display the posts in a table
-  if (posts) {
-    // Group posts by subreddit
-    const groupedPosts = posts.reduce((acc, post) => {
-      if (!acc[post.subreddit]) {
-        acc[post.subreddit] = [];
-      }
-      acc[post.subreddit].push(post);
-      return acc;
-    }, {});
-
+  if (posts && Object.keys(posts).length > 0) {
     return (
       <div className="App">
         <h1>Top Posts By Subreddit</h1>
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <AdUnit />
-        {Object.entries(groupedPosts).map(([subreddit, subredditPosts]) => (
+        {Object.entries(posts).map(([subreddit, subredditPosts]) => (
           <div key={subreddit} className="subreddit-section">
             <div className="section-header">
               <h2>r/{subreddit}</h2>
@@ -137,9 +178,10 @@ function App() {
                   navigator.clipboard.writeText(titles)
                     .then(() => {
                       const btn = document.activeElement;
-                      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="copy-icon"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copied!`;
+                      const icon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="copy-icon"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+                      btn.innerHTML = `${icon}Copied!`;
                       setTimeout(() => {
-                        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="copy-icon"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy Post Titles to Clipboard`;
+                        btn.innerHTML = `${icon}Copy Post Titles to Clipboard`;
                       }, 2000);
                     })
                     .catch(err => console.error('Failed to copy:', err));
@@ -152,28 +194,7 @@ function App() {
                 Copy Post Titles to Clipboard
               </button>
             </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Upvotes</th>
-                  <th>Link</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subredditPosts.map(post => (
-                  <tr key={post.id}>
-                    <td>{post.title}</td>
-                    <td>{post.ups}</td>
-                    <td>
-                      <a href={post.url} target="_blank" rel="noopener noreferrer">
-                        Visit
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <PostsTable subreddit={subreddit} posts={subredditPosts} />
           </div>
         ))}
         <AdUnit />
