@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import AdUnit from './components/AdUnit';
 
 function App() {
   // State variables
@@ -8,6 +9,19 @@ function App() {
   const [posts, setPosts] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Add this useEffect at the top of the component
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2228923604379440';
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
 
   // Function to add a subreddit to the list
   const addSubreddit = () => {
@@ -79,6 +93,7 @@ function App() {
       <div className="App">
         <h1>Top Posts By Subreddit</h1>
         {error && <p style={{ color: 'red' }}>{error}</p>}
+        <AdUnit />
         {Object.entries(groupedPosts).map(([subreddit, subredditPosts]) => (
           <div key={subreddit} className="subreddit-section">
             <div className="section-header">
@@ -131,6 +146,7 @@ function App() {
             </table>
           </div>
         ))}
+        <AdUnit />
       </div>
     );
   }
@@ -139,7 +155,8 @@ function App() {
   return (
     <div className="App">
       <h1>Reddit Top Posts Finder</h1>
-
+      <h2>Find the top posts in the last month from any subreddit</h2>
+      <AdUnit />
       <div className="input-group">
         <input
           type="text"
